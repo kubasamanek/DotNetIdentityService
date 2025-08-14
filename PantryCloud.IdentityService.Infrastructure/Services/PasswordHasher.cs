@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 
 namespace PantryCloud.IdentityService.Infrastructure.Services;
 
-
 public sealed class PasswordHasher
 {
     private const int SaltSize = 16;

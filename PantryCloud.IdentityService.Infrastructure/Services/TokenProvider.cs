@@ -8,7 +8,6 @@ using PantryCloud.IdentityService.Core.Entities;
 
 namespace PantryCloud.IdentityService.Infrastructure.Services;
 
-
 public sealed class TokenProvider(IConfiguration configuration)
 {
     public string CreateAccessToken(ApplicationUser user)
