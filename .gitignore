@@ -1,0 +1,20 @@
+# Rider / IntelliJ
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build output
+bin/
+obj/
+
+# VS Code (if you use it)
+.vscode/
+
+# Logs
+*.log
+
+# OS generated
+.DS_Store
+Thumbs.db
