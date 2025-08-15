@@ -1,5 +1,6 @@
 using MediatR;
 using ErrorOr;
+using FluentValidation;
 using PantryCloud.IdentityService.Application.DTOs;
 
 namespace PantryCloud.IdentityService.Application.Commands.Handlers;
