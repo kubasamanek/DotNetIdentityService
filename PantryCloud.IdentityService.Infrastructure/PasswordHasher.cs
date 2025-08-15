@@ -1,8 +1,8 @@
 using System.Security.Cryptography;
 
-namespace PantryCloud.IdentityService.Infrastructure.Services;
+namespace PantryCloud.IdentityService.Infrastructure;
 
-public sealed class PasswordHasher
+public static class PasswordHasher
 {
     private const int SaltSize = 16;
     private const int HashSize = 32;
@@ -10,7 +10,7 @@ public sealed class PasswordHasher
 
     private static readonly HashAlgorithmName Algorithm = HashAlgorithmName.SHA512;
 
-    public string Hash(string password)
+    public static string Hash(string password)
     {
         var salt = RandomNumberGenerator.GetBytes(SaltSize);
         var hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, Algorithm, HashSize);
@@ -18,7 +18,7 @@ public sealed class PasswordHasher
         return $"{Convert.ToHexString(hash)}-{Convert.ToHexString(salt)}";
     }
 
-    public bool Verify(string password, string passwordHash)
+    public static bool Verify(string password, string passwordHash)
     {
         var parts = passwordHash.Split('-');
         var hash = Convert.FromHexString(parts[0]);

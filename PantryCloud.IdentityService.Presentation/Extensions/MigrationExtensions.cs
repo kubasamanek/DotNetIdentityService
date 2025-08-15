@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PantryCloud.IdentityService.Infrastructure.Persistence;
 
-namespace PantryCloud.IdentityService.Presentation;
+namespace PantryCloud.IdentityService.Presentation.Extensions;
 
 public static class MigrationExtensions
 {

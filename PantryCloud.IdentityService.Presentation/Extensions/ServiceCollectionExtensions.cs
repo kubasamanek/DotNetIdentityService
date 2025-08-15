@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
+using PantryCloud.IdentityService.Presentation.Exceptions;
 using PantryCloud.IdentityService.Presentation.Mapping;
 
-namespace PantryCloud.IdentityService.Presentation;
+namespace PantryCloud.IdentityService.Presentation.Extensions;
 
 public static class ServiceCollectionExtensions
 {
@@ -14,6 +15,9 @@ public static class ServiceCollectionExtensions
         services.AddControllers();
         
         services.AddAutoMapper(_ => { }, typeof(AuthMappingProfile));
+        
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
         
         return services;
     }

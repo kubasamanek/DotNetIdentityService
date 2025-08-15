@@ -8,7 +8,7 @@ namespace PantryCloud.IdentityService.Presentation.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(IMediator mediator, IMapper mapper) : ControllerBase
+public class AuthController(IMediator mediator, IMapper mapper) : ApiControllerBase(mediator, mapper)
 {
 
     [HttpPost("login")]
@@ -16,16 +16,10 @@ public class AuthController(IMediator mediator, IMapper mapper) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request, CancellationToken cancellationToken)
     {
-        var command = mapper.Map<LoginCommand>(request);
-        var result = await mediator.Send(command, cancellationToken);
+        var command = Mapper.Map<LoginCommand>(request);
+        var result = await Mediator.Send(command, cancellationToken);
 
-        if (result is null)
-        {
-            return Unauthorized(new {Message = "Invalid credentials"});
-        }
-        
-        var response = mapper.Map<LoginResponseDto>(result);
-        return Ok(response);
+        return FromResult(result);
     }
   
     [HttpPost("refresh")]
@@ -33,14 +27,11 @@ public class AuthController(IMediator mediator, IMapper mapper) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto request, CancellationToken cancellationToken)
     {
-        var command = mapper.Map<RefreshTokenCommand>(request);
-        var result = await mediator.Send(command, cancellationToken);
+        var command = Mapper.Map<RefreshTokenCommand>(request);
+        var result = await Mediator.Send(command, cancellationToken);
 
-        if (result == null)
-            return BadRequest(new { Message = "Invalid refresh token" });
+        return FromResult(result);
 
-        var response = mapper.Map<RefreshTokenResponseDto>(result);
-        return Ok(response);
     }
     
     [HttpPost("register")]
@@ -48,13 +39,9 @@ public class AuthController(IMediator mediator, IMapper mapper) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request, CancellationToken cancellationToken)
     {
-        var command = mapper.Map<RegisterCommand>(request);
-        var result = await mediator.Send(command, cancellationToken);
+        var command = Mapper.Map<RegisterCommand>(request);
+        var result = await Mediator.Send(command, cancellationToken);
 
-        if (result == null)
-            return BadRequest(new { Message = "Could not create user" });
-
-        var response = mapper.Map<RegisterResponseDto>(result);
-        return Ok(response);
+        return FromResult(result);
     }
 }

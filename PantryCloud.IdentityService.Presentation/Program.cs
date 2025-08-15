@@ -1,6 +1,6 @@
 using PantryCloud.IdentityService.Application;
 using PantryCloud.IdentityService.Infrastructure;
-using PantryCloud.IdentityService.Presentation;
+using PantryCloud.IdentityService.Presentation.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +20,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseExceptionHandler();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -12,7 +12,8 @@ public sealed class TokenProvider(IConfiguration configuration)
 {
     public string CreateAccessToken(ApplicationUser user)
     {
-        string secretKey = configuration["Jwt:Secret"]!;
+        var secretKey = configuration["Jwt:Secret"]!;
+        
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -33,7 +34,7 @@ public sealed class TokenProvider(IConfiguration configuration)
 
         var handler = new JsonWebTokenHandler();
 
-        string token = handler.CreateToken(tokenDescriptor);
+        var token = handler.CreateToken(tokenDescriptor);
 
         return token;
     }

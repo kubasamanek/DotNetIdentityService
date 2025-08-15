@@ -4,23 +4,24 @@ using PantryCloud.IdentityService.Application;
 using PantryCloud.IdentityService.Application.DTOs;
 using PantryCloud.IdentityService.Core.Entities;
 using PantryCloud.IdentityService.Infrastructure.Persistence;
+using ErrorOr;
+using PantryCloud.IdentityService.Core.Errors;
 
 namespace PantryCloud.IdentityService.Infrastructure.Services;
 
 public class AuthService(
     TokenProvider tokenProvider,
-    PasswordHasher passwordHasher,
     ApplicationDbContext dbContext,
     ILogger<AuthService> logger) : IAuthService
 {
-    public async Task<RegisterResponseDto> RegisterAsync(RegisterRequestDto request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<RegisterResponseDto>> RegisterAsync(RegisterRequestDto request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Attempting to register user with email: {Email}", request.Email);
 
         if (await dbContext.Users.Exists(request.Email))
         {
             logger.LogWarning("Registration failed. User with email {Email} already exists.", request.Email);
-            throw new InvalidOperationException("User already exists.");
+            return AuthErrors.RegistrationUserAlreadyExists(request.Email);
         }
 
         var user = new ApplicationUser
@@ -28,7 +29,7 @@ public class AuthService(
             Id = Guid.NewGuid(),
             Email = request.Email,
             EmailVerified = false,
-            PasswordHash = passwordHasher.Hash(request.Password),
+            PasswordHash = PasswordHasher.Hash(request.Password),
         };
 
         dbContext.Users.Add(user);
@@ -39,16 +40,16 @@ public class AuthService(
         return new RegisterResponseDto(user.Id.ToString());
     }
 
-    public async Task<LoginResponseDto> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<LoginResponseDto>> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken)
     {
         logger.LogInformation("User login attempt: {Email}", request.Email);
 
         var user = await dbContext.Users.GetByEmail(request.Email);
 
-        if (user is null || !passwordHasher.Verify(request.Password, user.PasswordHash))
+        if (user is null || !PasswordHasher.Verify(request.Password, user.PasswordHash))
         {
             logger.LogWarning("Login failed for email: {Email}", request.Email);
-            throw new UnauthorizedAccessException("Invalid email or password.");
+            return AuthErrors.LoginFailed;
         }
 
         var accessToken = tokenProvider.CreateAccessToken(user);
@@ -64,7 +65,7 @@ public class AuthService(
         return new LoginResponseDto(accessToken, refreshToken);
     }
 
-    public async Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<RefreshTokenResponseDto>> RefreshTokenAsync(RefreshTokenRequestDto request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Attempting to refresh token");
 
@@ -74,13 +75,13 @@ public class AuthService(
         if (user == null)
         {
             logger.LogWarning("Refresh token failed: token not found");
-            throw new UnauthorizedAccessException("Invalid refresh token.");
+            return AuthErrors.InvalidRefreshToken;
         }
 
         if (user.RefreshTokenExpiryTime < DateTime.UtcNow)
         {
             logger.LogWarning("Refresh token expired for user {UserId}", user.Id);
-            throw new UnauthorizedAccessException("Refresh token expired.");
+            return AuthErrors.ExpiredRefreshToken;
         }
 
         var newAccessToken = tokenProvider.CreateAccessToken(user);

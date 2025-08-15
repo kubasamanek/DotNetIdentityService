@@ -14,7 +14,6 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructureLayerServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<PasswordHasher>();
         services.AddSingleton<TokenProvider>();
         services.AddScoped<IAuthService, AuthService>();
         
