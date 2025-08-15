@@ -1,11 +1,12 @@
 using MediatR;
+using ErrorOr;
 using PantryCloud.IdentityService.Application.DTOs;
 
 namespace PantryCloud.IdentityService.Application.Commands.Handlers;
 
-public class RegisterCommandHandler(IAuthService authService) : IRequestHandler<RegisterCommand, RegisterResponseDto?>
+public class RegisterCommandHandler(IAuthService authService) : IRequestHandler<RegisterCommand, ErrorOr<RegisterResponseDto>>
 {
-    public async Task<RegisterResponseDto?> Handle(RegisterCommand request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<RegisterResponseDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         return await authService.RegisterAsync(request.Request, cancellationToken);
     }
