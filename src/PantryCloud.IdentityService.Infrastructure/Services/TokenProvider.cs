@@ -4,11 +4,12 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using PantryCloud.IdentityService.Application;
 using PantryCloud.IdentityService.Core.Entities;
 
 namespace PantryCloud.IdentityService.Infrastructure.Services;
 
-public sealed class TokenProvider(IConfiguration configuration)
+public sealed class TokenProvider(IConfiguration configuration) : ITokenProvider
 {
     public string CreateAccessToken(ApplicationUser user)
     {
