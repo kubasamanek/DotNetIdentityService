@@ -10,7 +10,7 @@ using PantryCloud.IdentityService.Core.Errors;
 namespace PantryCloud.IdentityService.Infrastructure.Services;
 
 public class AuthService(
-    TokenProvider tokenProvider,
+    ITokenProvider tokenProvider,
     ApplicationDbContext dbContext,
     ILogger<AuthService> logger) : IAuthService
 {

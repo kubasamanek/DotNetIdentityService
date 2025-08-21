@@ -26,5 +26,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <InternalsVisibleTo Include="PantryCloud.IdentityService.UnitTests" />
+  </ItemGroup>
 
 </Project>

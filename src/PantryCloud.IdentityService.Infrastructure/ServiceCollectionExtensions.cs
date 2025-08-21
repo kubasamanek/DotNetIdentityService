@@ -14,7 +14,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructureLayerServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<TokenProvider>();
+        services.AddSingleton<ITokenProvider, TokenProvider>();
         services.AddScoped<IAuthService, AuthService>();
         
         services.AddDbContext<ApplicationDbContext>(options =>
