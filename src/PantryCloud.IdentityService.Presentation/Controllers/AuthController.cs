@@ -19,7 +19,7 @@ public class AuthController(IMediator mediator, IMapper mapper) : ApiControllerB
         var command = Mapper.Map<LoginCommand>(request);
         var result = await Mediator.Send(command, cancellationToken);
 
-        return FromResult(result);
+        return FromResult(result, StatusCodes.Status200OK);
     }
   
     [HttpPost("refresh")]
@@ -30,7 +30,7 @@ public class AuthController(IMediator mediator, IMapper mapper) : ApiControllerB
         var command = Mapper.Map<RefreshTokenCommand>(request);
         var result = await Mediator.Send(command, cancellationToken);
 
-        return FromResult(result);
+        return FromResult(result, StatusCodes.Status200OK);
 
     }
     
@@ -42,6 +42,6 @@ public class AuthController(IMediator mediator, IMapper mapper) : ApiControllerB
         var command = Mapper.Map<RegisterCommand>(request);
         var result = await Mediator.Send(command, cancellationToken);
 
-        return FromResult(result);
+        return FromResult(result, StatusCodes.Status200OK);
     }
 }

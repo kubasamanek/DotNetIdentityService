@@ -45,10 +45,11 @@ public abstract class ApiControllerBase(IMediator mediator, IMapper mapper) : Co
             detail: firstError.Description);
     }
 
-    protected IActionResult FromResult<T>(ErrorOr<T> result)
+    protected IActionResult FromResult<T>(
+        ErrorOr<T> result, int successStatusCode)
     {
         return result.Match<IActionResult>(
-            value => Ok(value),
+            value => StatusCode(successStatusCode, value),
             Problem
         );
     }
