@@ -1,4 +1,5 @@
-using System.Text;
+using System.Security.Cryptography;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using PantryCloud.IdentityService.Infrastructure.Services;
@@ -8,36 +9,32 @@ namespace PantryCloud.IdentityService.UnitTests.Auth;
 
 public class TokenProviderTests
 {
+    private readonly TokenProvider _provider = new(BuildTestConfiguration());
+
     [Fact]
     public async Task CreateAccessToken_IsValid_AndContainsExpectedClaims()
     {
-        var provider = new TokenProvider(Constants.Jwt.Config);
-        var token = provider.CreateAccessToken(Constants.ExampleUser);
+        var token = _provider.CreateAccessToken(Constants.ExampleUser);
 
         var handler = new JsonWebTokenHandler();
-        var tvp = BuildValidationParams(Constants.Jwt.Secret, Constants.Jwt.Issuer, Constants.Jwt.Audience);
-        var result = await handler.ValidateTokenAsync(token, tvp);
+        var result = await handler.ValidateTokenAsync(token, BuildValidationParams());
 
         result.IsValid.ShouldBeTrue(result.Exception?.ToString());
 
-        var sub = result.ClaimsIdentity!.FindFirst(JwtRegisteredClaimNames.Sub)!;
-        var email = result.ClaimsIdentity!.FindFirst(JwtRegisteredClaimNames.Email)!;
-        var verified = result.ClaimsIdentity!.FindFirst("email_verified")!;
-
-        sub.Value.ShouldBe(Constants.ExampleUser.Id.ToString());
-        email.Value.ShouldBe(Constants.ExampleUser.Email);
-        verified.Value.ShouldBe(Constants.ExampleUser.EmailVerified.ToString());
+        var identity = result.ClaimsIdentity!;
+        identity.FindFirst("sub")!.Value.ShouldBe(Constants.ExampleUser.Id.ToString());
+        identity.FindFirst("email")!.Value.ShouldBe(Constants.ExampleUser.Email);
+        identity.FindFirst("email_verified")!.Value.ShouldBe(Constants.ExampleUser.EmailVerified.ToString());
     }
 
     [Fact]
-    public async Task CreateAccessToken_Expiration_IsInNearFuture()
+    public async Task CreateAccessToken_Expiration_IsValid()
     {
-        var provider = new TokenProvider(Constants.Jwt.Config);
-        var token = provider.CreateAccessToken(Constants.ExampleUser);
+        var token = _provider.CreateAccessToken(Constants.ExampleUser);
 
         var handler = new JsonWebTokenHandler();
-        var tvp = BuildValidationParams(Constants.Jwt.Secret, Constants.Jwt.Issuer, Constants.Jwt.Audience);
-        var result = await handler.ValidateTokenAsync(token, tvp);
+        var result = await handler.ValidateTokenAsync(token, BuildValidationParams());
+
         result.IsValid.ShouldBeTrue(result.Exception?.ToString());
 
         var jwt = handler.ReadJsonWebToken(token);
@@ -49,38 +46,71 @@ public class TokenProviderTests
     }
 
     [Fact]
-    public async Task CreateAccessToken_FailsValidation_WithWrongSecret()
+    public async Task CreateAccessToken_FailsValidation_WithWrongPublicKey()
     {
-        var provider = new TokenProvider(Constants.Jwt.Config);
-        var token = provider.CreateAccessToken(Constants.ExampleUser);
+        var token = _provider.CreateAccessToken(Constants.ExampleUser);
+
+        // Generate a different key for validation
+        using var rsa = RSA.Create(2048);
+        var wrongKey = new RsaSecurityKey(rsa);
 
         var handler = new JsonWebTokenHandler();
-        var badTvp = BuildValidationParams(Constants.Jwt.BadSecret, Constants.Jwt.Issuer, Constants.Jwt.Audience);
-        var validation = await handler.ValidateTokenAsync(token, badTvp);
+        var result = await handler.ValidateTokenAsync(token, new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = Constants.Jwt.Issuer,
+            ValidateAudience = true,
+            ValidAudience = Constants.Jwt.Audience,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = wrongKey,
+            ClockSkew = TimeSpan.FromSeconds(5)
+        });
 
-        validation.IsValid.ShouldBeFalse();
+        result.IsValid.ShouldBeFalse();
     }
 
     [Fact]
-    public void CreateRefreshToken_IsBase64Of64Bytes()
+    public void CreateRefreshToken_Generates64ByteToken()
     {
-        var provider = new TokenProvider(Constants.Jwt.Config);
-        var refresh = provider.CreateRefreshToken();
-
-        Convert.FromBase64String(refresh).Length.ShouldBe(64);
+        var refreshToken = _provider.CreateRefreshToken();
+        var bytes = Convert.FromBase64String(refreshToken);
+        bytes.Length.ShouldBe(64);
     }
-    
-    private static TokenValidationParameters BuildValidationParams(string secret, string issuer, string audience)
-        => new()
+
+    private static TokenValidationParameters BuildValidationParams()
+    {
+        var publicKey = File.ReadAllText(Constants.Jwt.PublicKeyPath);
+        var rsa = RSA.Create();
+        rsa.ImportFromPem(publicKey.ToCharArray());
+
+        var securityKey = new RsaSecurityKey(rsa);
+
+        return new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = issuer,
+            ValidIssuer = Constants.Jwt.Issuer,
             ValidateAudience = true,
-            ValidAudience = audience,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+            ValidAudience = Constants.Jwt.Audience,
             ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = securityKey,
             ClockSkew = TimeSpan.FromSeconds(5)
         };
+    }
 
+    private static IConfiguration BuildTestConfiguration()
+    {
+        var dict = new Dictionary<string, string?>
+        {
+            { "Jwt:PrivateKeyPath", Constants.Jwt.PrivateKeyPath },
+            { "Jwt:Issuer", Constants.Jwt.Issuer },
+            { "Jwt:Audience", Constants.Jwt.Audience },
+            { "Jwt:ExpirationInMinutes", Constants.Jwt.ExpirationInMinutes.ToString() }
+        };
+
+        return new ConfigurationBuilder()
+            .AddInMemoryCollection(dict!)
+            .Build();
+    }
 }

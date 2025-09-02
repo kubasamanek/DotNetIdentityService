@@ -26,6 +26,8 @@ internal static class Constants
         public const string Issuer = "PantryCloud.IdentityService";
         public const string Audience = "PantryCloud.WebClient";
         public const int ExpirationInMinutes = 5;
+        public const string PublicKeyPath = "Auth/Certs/jwt-public.pem";
+        public const string PrivateKeyPath = "Auth/Certs/jwt-private.pem";
 
         public static readonly IConfiguration Config =
             new ConfigurationBuilder()

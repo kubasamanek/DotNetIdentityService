@@ -29,4 +29,17 @@
       <ProjectReference Include="..\src\PantryCloud.IdentityService.Presentation\PantryCloud.IdentityService.Presentation.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Auth\Certs\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Auth/Certs/jwt-private.pem">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Auth/Certs/jwt-public.pem">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>
