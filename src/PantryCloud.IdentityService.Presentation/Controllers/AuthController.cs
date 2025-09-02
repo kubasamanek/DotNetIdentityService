@@ -6,7 +6,6 @@ using PantryCloud.IdentityService.Application.DTOs;
 
 namespace PantryCloud.IdentityService.Presentation.Controllers;
 
-[ApiController]
 [Route("api/auth")]
 public class AuthController(IMediator mediator, IMapper mapper) : ApiControllerBase(mediator, mapper)
 {

@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -9,16 +8,30 @@ using PantryCloud.IdentityService.Core.Entities;
 
 namespace PantryCloud.IdentityService.Infrastructure.Services;
 
-public sealed class TokenProvider(IConfiguration configuration) : ITokenProvider
+public sealed class TokenProvider : ITokenProvider
 {
+    private readonly IConfiguration _configuration;
+    private readonly SigningCredentials _signingCredentials;
+
+    public TokenProvider(IConfiguration configuration)
+    {
+        var privateKeyPath = configuration["Jwt:PrivateKeyPath"]!;
+        var privateRsa = RSA.Create();
+        var privateKey = File.ReadAllText(privateKeyPath);
+        privateRsa.ImportFromPem(privateKey.ToCharArray());
+
+        var rsaSecurityKey = new RsaSecurityKey(privateRsa)
+        {
+            KeyId = "key-id"
+        };
+        
+        _signingCredentials = new SigningCredentials(rsaSecurityKey, SecurityAlgorithms.RsaSha256);
+        _configuration = configuration;
+    }
+
     public string CreateAccessToken(ApplicationUser user)
     {
-        var secretKey = configuration["Jwt:Secret"]!;
-        
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
+        var handler = new JsonWebTokenHandler();
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(
@@ -27,17 +40,13 @@ public sealed class TokenProvider(IConfiguration configuration) : ITokenProvider
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("email_verified", user.EmailVerified.ToString())
             ]),
-            Expires = DateTime.UtcNow.AddMinutes(configuration.GetValue<int>("Jwt:ExpirationInMinutes")),
-            SigningCredentials = credentials,
-            Issuer = configuration["Jwt:Issuer"],
-            Audience = configuration["Jwt:Audience"]
+            Expires = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("Jwt:ExpirationInMinutes")),
+            SigningCredentials = _signingCredentials,
+            Issuer = _configuration["Jwt:Issuer"],
+            Audience = _configuration["Jwt:Audience"]
         };
 
-        var handler = new JsonWebTokenHandler();
-
-        var token = handler.CreateToken(tokenDescriptor);
-
-        return token;
+        return handler.CreateToken(tokenDescriptor);
     }
 
     public string CreateRefreshToken()

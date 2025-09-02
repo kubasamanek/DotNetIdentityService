@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -30,15 +31,23 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddJwtAuthentification(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(o =>
+            .AddJwtBearer(options =>
             {
-                o.RequireHttpsMetadata = false;
-                o.TokenValidationParameters = new TokenValidationParameters
+                var publicKeyPath = configuration["Jwt:PublicKeyPath"];
+                var publicRsa = RSA.Create();
+                publicRsa.ImportFromPem(File.ReadAllText(publicKeyPath).ToCharArray());
+
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Secret"]!)),
+                    ValidateIssuer = true,
                     ValidIssuer = configuration["Jwt:Issuer"],
+
+                    ValidateAudience = true,
                     ValidAudience = configuration["Jwt:Audience"],
-                    ClockSkew = TimeSpan.Zero
+
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new RsaSecurityKey(publicRsa)
                 };
             });
         
