@@ -20,7 +20,7 @@ public class JwtSettings
 public class AppSettings
 {
     public string FrontendUrl { get; set; } = "http://localhost:5019";
-    public bool SendEmails { get; set; } = true;
+    public bool SendEmails { get; set; } = false;
 }
 
 public class EmailSettings
