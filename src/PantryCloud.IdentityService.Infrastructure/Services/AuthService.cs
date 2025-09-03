@@ -6,7 +6,6 @@ using PantryCloud.IdentityService.Application.DTOs;
 using PantryCloud.IdentityService.Core.Entities;
 using PantryCloud.IdentityService.Infrastructure.Persistence;
 using ErrorOr;
-using Microsoft.Extensions.Configuration;
 using PantryCloud.IdentityService.Core;
 using PantryCloud.IdentityService.Core.Errors;
 
@@ -36,12 +35,25 @@ public class AuthService(
             PasswordHash = PasswordHasher.Hash(request.Password),
         };
 
-        dbContext.Users.Add(user);
+        var verifyEmailTokenString = tokenProvider.CreateVerifyEmailToken();
+
+        var tokenEntity = new VerifyEmailToken
+        {
+            CreatedAt = DateTime.UtcNow,
+            Email = request.Email,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(config.App.VerifyEmailTokenExpirationInMinutes),
+            Token = verifyEmailTokenString
+        };
+
+        await dbContext.Users.AddAsync(user, cancellationToken);
+        await dbContext.VerifyEmailTokens.AddAsync(tokenEntity, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User registered successfully with ID: {UserId}", user.Id);
+        
+        // TODO: Send confirmation email
 
-        return new RegisterResponseDto(user.Id.ToString());
+        return new RegisterResponseDto(user.Id.ToString(), verifyEmailTokenString);
     }
 
     public async Task<ErrorOr<LoginResponseDto>> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken)
@@ -53,7 +65,13 @@ public class AuthService(
         if (user is null || !PasswordHasher.Verify(request.Password, user.PasswordHash))
         {
             logger.LogWarning("Login failed for email: {Email}", request.Email);
-            return AuthErrors.LoginFailed;
+            return AuthErrors.LoginInvalidCredentials;
+        }
+
+        if (!user.EmailVerified)
+        {
+            logger.LogWarning("Login failed for email: {Email} (not verified)", request.Email);
+            return AuthErrors.LoginEmailNotVerified;
         }
 
         var accessToken = tokenProvider.CreateAccessToken(user);
@@ -121,7 +139,7 @@ public class AuthService(
         {
             Email = request.Email,
             CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(1),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(config.App.ResetPasswordTokenExpirationInMinutes),
             Token = token,
             CallBackUrl = callbackUrl
         };
@@ -166,19 +184,19 @@ public class AuthService(
         if (token is null)
         {
             logger.LogWarning("Reset password failed: token not found");
-            return AuthErrors.PasswordResetTokenNotValid;
+            return AuthErrors.TokenNotValid;
         }
         
         if (token.IsUsed)
         {
             logger.LogWarning("Reset password failed: token has been used");
-            return AuthErrors.PasswordResetTokenAlreadyUsed;
+            return AuthErrors.TokenAlreadyUsed;
         }
         
         if (token.IsExpired)
         {
             logger.LogWarning("Reset password failed: token has expired");
-            return AuthErrors.PasswordResetTokenExpired;
+            return AuthErrors.TokenExpired;
         }
 
         user.PasswordHash = PasswordHasher.Hash(request.NewPassword);
@@ -191,5 +209,49 @@ public class AuthService(
         // TODO: Token cleanup (hosted service/cron job)
         
         return new ResetPasswordResponseDto();
+    }
+
+    public async Task<ErrorOr<VerifyEmailResponseDto>> VerifyEmailAsync(VerifyEmailRequestDto request, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("User {Email} is trying to verify email.", request.Email);
+                
+        var user = await dbContext.Users
+            .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+        
+        if (user is null)
+        {
+            logger.LogWarning("Reset password failed: user not found");
+            return AuthErrors.UserDoesNotExist(request.Email);
+        }
+        
+        var token = await dbContext.VerifyEmailTokens
+            .FirstOrDefaultAsync(t => t.Email == request.Email && t.Token == request.Token, cancellationToken);
+
+        if (token is null)
+        {
+            logger.LogWarning("Reset password failed: token not found");
+            return AuthErrors.TokenNotValid;
+        }
+        
+        if (token.IsUsed)
+        {
+            logger.LogWarning("Reset password failed: token has been used");
+            return AuthErrors.TokenAlreadyUsed;
+        }
+        
+        if (token.IsExpired)
+        {
+            logger.LogWarning("Reset password failed: token has expired");
+            return AuthErrors.TokenExpired;
+        }
+        
+        user.EmailVerified = true;
+        token.UsedAt = DateTime.UtcNow;
+        
+        await dbContext.SaveChangesAsync(cancellationToken);
+        
+        logger.LogInformation("User {Email} successfully verified email.", request.Email);
+        
+        return new VerifyEmailResponseDto();
     }
 }

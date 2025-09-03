@@ -66,4 +66,17 @@ internal static class TestHelper
             UsedAt = used ? DateTime.UtcNow : null
         };
     }
+    
+    public static VerifyEmailToken MakeVerifyEmailToken(string email, bool used = false, bool expired = false)
+    {
+        return new VerifyEmailToken
+        {
+            Id = Guid.NewGuid(),
+            Email = email,
+            Token = Guid.NewGuid().ToString(),
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = expired ? DateTime.UtcNow.AddMinutes(-5) : DateTime.UtcNow.AddMinutes(10),
+            UsedAt = used ? DateTime.UtcNow : null
+        };
+    }
 }

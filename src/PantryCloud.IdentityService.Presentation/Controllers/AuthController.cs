@@ -59,9 +59,22 @@ public class AuthController(IMediator mediator, IMapper mapper) : ApiControllerB
     [HttpPost("reset-password")]
     [ProducesResponseType(typeof(ResetPasswordResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ForgotPassword([FromBody] ResetPasswordRequestDto request, CancellationToken cancellationToken)
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request, CancellationToken cancellationToken)
     {
         var command = Mapper.Map<ResetPasswordCommand>(request);
+        var result = await Mediator.Send(command, cancellationToken);
+
+        return FromResult(result, StatusCodes.Status200OK);
+    }
+
+    [HttpPost("verify-email")]
+    [ProducesResponseType(typeof(VerifyEmailResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var command = Mapper.Map<VerifyEmailCommand>(request);
         var result = await Mediator.Send(command, cancellationToken);
 
         return FromResult(result, StatusCodes.Status200OK);

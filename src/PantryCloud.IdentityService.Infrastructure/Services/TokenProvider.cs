@@ -61,4 +61,10 @@ public sealed class TokenProvider : ITokenProvider
         var randomBytes = RandomNumberGenerator.GetBytes(64);
         return Convert.ToBase64String(randomBytes);
     }
+    
+    public string CreateVerifyEmailToken()
+    {
+        var randomBytes = RandomNumberGenerator.GetBytes(64);
+        return Convert.ToBase64String(randomBytes);
+    }
 }

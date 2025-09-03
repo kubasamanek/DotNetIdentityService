@@ -9,9 +9,14 @@ public static class AuthErrors
         description: $"User with email {email} already exists."
     );
 
-    public static Error LoginFailed = Error.Unauthorized(
+    public static Error LoginInvalidCredentials = Error.Unauthorized(
         code: "Auth.Login.InvalidCredentials",
         description: "Invalid email or password."
+    );
+        
+    public static Error LoginEmailNotVerified = Error.Unauthorized(
+        code: "Auth.Login.EmailNotVerified",
+        description: "You need to verify your email first."
     );
 
     public static Error InvalidRefreshToken = Error.Unauthorized(
@@ -29,18 +34,18 @@ public static class AuthErrors
         description: $"User with email {email} not found."
     );
 
-    public static Error PasswordResetTokenNotValid = Error.Unauthorized(
-        code: "Auth.PasswordResetTokenInvalid",
-        description: $"Password reset token is not valid."
+    public static Error TokenNotValid = Error.Unauthorized(
+        code: "Auth.TokenInvalid",
+        description: $"Token is not valid."
     );
     
-    public static Error PasswordResetTokenExpired = Error.Unauthorized(
-        code: "Auth.PasswordResetTokenExpired",
-        description: $"Password reset token is expired."
+    public static Error TokenExpired = Error.Unauthorized(
+        code: "Auth.TokenExpired",
+        description: $"Token is expired."
     );
     
-    public static Error PasswordResetTokenAlreadyUsed = Error.Unauthorized(
-        code: "Auth.PasswordResetTokenAlreadyUsed",
-        description: $"Password reset token has already been used."
+    public static Error TokenAlreadyUsed = Error.Unauthorized(
+        code: "Auth.TokenAlreadyUsed",
+        description: $"Token has already been used."
     );
 }
