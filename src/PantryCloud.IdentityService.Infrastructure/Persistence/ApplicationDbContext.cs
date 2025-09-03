@@ -9,9 +9,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<ApplicationUser> Users { get; set; }
     
+    public DbSet<ResetPasswordToken> ResetPasswordTokens { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        builder.ApplyConfigurationsFromAssembly(typeof(ApplicationUser).Assembly);
 
         base.OnModelCreating(builder);
     }

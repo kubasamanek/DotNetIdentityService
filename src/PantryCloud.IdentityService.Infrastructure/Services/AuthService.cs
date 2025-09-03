@@ -5,6 +5,7 @@ using PantryCloud.IdentityService.Application.DTOs;
 using PantryCloud.IdentityService.Core.Entities;
 using PantryCloud.IdentityService.Infrastructure.Persistence;
 using ErrorOr;
+using Microsoft.Extensions.Configuration;
 using PantryCloud.IdentityService.Core.Errors;
 
 namespace PantryCloud.IdentityService.Infrastructure.Services;
@@ -12,7 +13,8 @@ namespace PantryCloud.IdentityService.Infrastructure.Services;
 public class AuthService(
     ITokenProvider tokenProvider,
     ApplicationDbContext dbContext,
-    ILogger<AuthService> logger) : IAuthService
+    ILogger<AuthService> logger,
+    IConfiguration config) : IAuthService
 {
     public async Task<ErrorOr<RegisterResponseDto>> RegisterAsync(RegisterRequestDto request, CancellationToken cancellationToken)
     {
@@ -95,5 +97,84 @@ public class AuthService(
         logger.LogInformation("Refresh token succeeded for user {UserId}", user.Id);
 
         return new RefreshTokenResponseDto(newAccessToken, newRefreshToken);
+    }
+
+    public async Task<ErrorOr<ForgotPasswordResponseDto>> ForgotPasswordAsync(ForgotPasswordRequestDto request, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("User {Email} forgot password.", request.Email);
+        
+        var user = await dbContext.Users
+            .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+        
+        if (user == null)
+        {
+            logger.LogWarning("Refresh token failed: token not found");
+            return AuthErrors.UserDoesNotExist(request.Email);
+        }
+
+        var token = tokenProvider.CreatePasswordResetToken();
+        var callbackUrl = $"{config["App:FrontendUrl"]}/reset-password?email={user.Email}&token={Uri.EscapeDataString(token)}";
+
+        var entity = new ResetPasswordToken
+        {
+            Email = request.Email,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(1),
+            Token = token,
+            CallBackUrl = callbackUrl
+        };
+        
+        await dbContext.ResetPasswordTokens.AddAsync(entity, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        
+        //TODO: SEND EMAIL
+
+        return new ForgotPasswordResponseDto(token, callbackUrl);
+    }
+
+    public async Task<ErrorOr<ResetPasswordResponseDto>> ResetPasswordAsync(ResetPasswordRequestDto request, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("User {Email} is trying to reset password.", request.Email);
+                
+        var user = await dbContext.Users
+            .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+        
+        if (user is null)
+        {
+            logger.LogWarning("Reset password failed: user not found");
+            return AuthErrors.UserDoesNotExist(request.Email);
+        }
+        
+        var token = await dbContext.ResetPasswordTokens
+            .FirstOrDefaultAsync(t => t.Email == request.Email && t.Token == request.Token, cancellationToken);
+
+        if (token is null)
+        {
+            logger.LogWarning("Reset password failed: token not found");
+            return AuthErrors.PasswordResetTokenNotValid;
+        }
+        
+        if (token.IsUsed)
+        {
+            logger.LogWarning("Reset password failed: token has been used");
+            return AuthErrors.PasswordResetTokenAlreadyUsed;
+        }
+        
+        if (token.IsExpired)
+        {
+            logger.LogWarning("Reset password failed: token has expired");
+            return AuthErrors.PasswordResetTokenExpired;
+        }
+
+        user.PasswordHash = PasswordHasher.Hash(request.NewPassword);
+        token.UsedAt =  DateTime.UtcNow;
+        
+        await dbContext.SaveChangesAsync(cancellationToken);
+        
+        logger.LogInformation("User {Email} successfully reset password", request.Email);
+
+        // TODO: Token cleanup (hosted service/cron job)
+        
+        return new ResetPasswordResponseDto();
     }
 }

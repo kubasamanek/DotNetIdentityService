@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PantryCloud.IdentityService.Application;
 using PantryCloud.IdentityService.Application.DTOs;
@@ -12,12 +13,13 @@ public class AuthServiceTests
 {
     private readonly ILogger<AuthService> _loggerMock = TestHelper.MockLogger();
     private readonly ITokenProvider  _tokenProviderMock = TestHelper.MockTokenProvider();
+    private readonly IConfiguration _configurationMock = TestHelper.MockConfiguration();
 
     [Fact]
     public async Task RegisterAsync_ShouldCreateUser_AndReturnId_WhenNewEmail()
     {
         await using var db = TestHelper.CreateInMemoryContext(nameof(RegisterAsync_ShouldCreateUser_AndReturnId_WhenNewEmail));
-        var authService = new AuthService(_tokenProviderMock, db, _loggerMock);
+        var authService = new AuthService(_tokenProviderMock, db, _loggerMock, _configurationMock);
 
         var request = new RegisterRequestDto(Constants.ExampleUser.Email, Constants.StrongPassword);
 
@@ -40,7 +42,7 @@ public class AuthServiceTests
         db.Users.Add(existing);
         await db.SaveChangesAsync();
         
-        var authService = new AuthService(_tokenProviderMock, db, _loggerMock);
+        var authService = new AuthService(_tokenProviderMock, db, _loggerMock,  _configurationMock);
 
         var request = new RegisterRequestDto(existing.Email, Constants.ExamplePassword);
 
@@ -59,7 +61,7 @@ public class AuthServiceTests
         await db.SaveChangesAsync();
 
         var tokenProvider = TestHelper.MockTokenProvider(accessToken: "AT", refreshToken: "RT");
-        var authService = new AuthService(tokenProvider, db, _loggerMock);
+        var authService = new AuthService(tokenProvider, db, _loggerMock, _configurationMock);
 
         var request = new LoginRequestDto(user.Email, Constants.StrongPassword);
 
@@ -79,7 +81,7 @@ public class AuthServiceTests
     public async Task LoginAsync_ShouldReturnError_WhenUserNotFound()
     {
         await using var db = TestHelper.CreateInMemoryContext(nameof(LoginAsync_ShouldReturnError_WhenUserNotFound));
-        var authService = new AuthService(_tokenProviderMock, db, _loggerMock);
+        var authService = new AuthService(_tokenProviderMock, db, _loggerMock, _configurationMock);
 
         var result = await authService.LoginAsync(
             new LoginRequestDto(Constants.ExampleUser.Email, "x"), 
@@ -99,7 +101,7 @@ public class AuthServiceTests
 
         var tokenProvider = TestHelper.MockTokenProvider();
         var logger = TestHelper.MockLogger();
-        var authService = new AuthService(tokenProvider, db, logger);
+        var authService = new AuthService(tokenProvider, db, logger,  _configurationMock);
 
         var result = await authService.LoginAsync(
             new LoginRequestDto(user.Email, "Wrong#123"),
@@ -121,7 +123,7 @@ public class AuthServiceTests
         await db.SaveChangesAsync();
 
         var tokenProvider = TestHelper.MockTokenProvider(accessToken: "NEW_AT", refreshToken: "NEW_RT");
-        var authService = new AuthService(tokenProvider, db, _loggerMock);
+        var authService = new AuthService(tokenProvider, db, _loggerMock, _configurationMock);
 
         var result = await authService.RefreshTokenAsync(
             new RefreshTokenRequestDto("OLD_RT"), 
@@ -141,7 +143,7 @@ public class AuthServiceTests
     public async Task RefreshTokenAsync_ShouldReturnError_WhenTokenNotFound()
     {
         await using var db = TestHelper.CreateInMemoryContext(nameof(RefreshTokenAsync_ShouldReturnError_WhenTokenNotFound));
-        var authService = new AuthService(_tokenProviderMock, db, _loggerMock);
+        var authService = new AuthService(_tokenProviderMock, db, _loggerMock, _configurationMock);
 
         var result = await authService.RefreshTokenAsync(
             new RefreshTokenRequestDto("NON_EXISTENT"), 
@@ -161,7 +163,7 @@ public class AuthServiceTests
         db.Users.Add(user);
         await db.SaveChangesAsync();
         
-        var authService = new AuthService(_tokenProviderMock, db, _loggerMock);
+        var authService = new AuthService(_tokenProviderMock, db, _loggerMock, _configurationMock);
 
         var result = await authService.RefreshTokenAsync(
             new RefreshTokenRequestDto("EXPIRED_RT"), 

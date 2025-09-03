@@ -54,4 +54,10 @@ public sealed class TokenProvider : ITokenProvider
         var randomBytes = RandomNumberGenerator.GetBytes(64);
         return Convert.ToBase64String(randomBytes);
     }
+
+    public string CreatePasswordResetToken()
+    {
+        var randomBytes = RandomNumberGenerator.GetBytes(64);
+        return Convert.ToBase64String(randomBytes);
+    }
 }

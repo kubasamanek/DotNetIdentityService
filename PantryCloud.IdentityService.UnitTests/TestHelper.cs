@@ -30,6 +30,12 @@ internal static class TestHelper
         return tp;
     }
 
+    public static IConfiguration MockConfiguration()
+    {
+        var tp = Substitute.For<IConfiguration>();
+        return tp;
+    }
+
     public static ILogger<AuthService> MockLogger()
         => Substitute.For<ILogger<AuthService>>();
 

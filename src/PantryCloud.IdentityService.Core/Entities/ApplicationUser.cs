@@ -8,7 +8,7 @@ public class ApplicationUser
     
     public required string Email { get; init; }
     
-    public required string PasswordHash { get; init; }
+    public required string PasswordHash { get; set; }
     public bool EmailVerified { get; init; }
     
     public string? RefreshToken { get; set; }

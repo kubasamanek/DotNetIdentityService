@@ -6,4 +6,5 @@ public interface ITokenProvider
 {
     public string CreateAccessToken(ApplicationUser user);
     public string CreateRefreshToken();
+    public string CreatePasswordResetToken();
 }
