@@ -2,21 +2,21 @@
 
 #nullable disable
 
-namespace PantryCloud.IdentityService.Infrastructure.Migrations
+namespace PantryCloud.IdentityService.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class RemoveFirstAndLastNameFromUser : Migration
+    public partial class RemoveFirstAndLastName : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
                 name: "FirstName",
-                table: "AspNetUsers");
+                table: "Users");
 
             migrationBuilder.DropColumn(
                 name: "LastName",
-                table: "AspNetUsers");
+                table: "Users");
         }
 
         /// <inheritdoc />
@@ -24,14 +24,14 @@ namespace PantryCloud.IdentityService.Infrastructure.Migrations
         {
             migrationBuilder.AddColumn<string>(
                 name: "FirstName",
-                table: "AspNetUsers",
+                table: "Users",
                 type: "text",
                 nullable: false,
                 defaultValue: "");
 
             migrationBuilder.AddColumn<string>(
                 name: "LastName",
-                table: "AspNetUsers",
+                table: "Users",
                 type: "text",
                 nullable: false,
                 defaultValue: "");

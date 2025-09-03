@@ -9,11 +9,11 @@ using PantryCloud.IdentityService.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace PantryCloud.IdentityService.Infrastructure.Persistance.Migrations
+namespace PantryCloud.IdentityService.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250903092202_AddResetPasswordTokenConfiguration")]
-    partial class AddResetPasswordTokenConfiguration
+    [Migration("20250903091933_AddResetPasswordTokens")]
+    partial class AddResetPasswordTokens
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

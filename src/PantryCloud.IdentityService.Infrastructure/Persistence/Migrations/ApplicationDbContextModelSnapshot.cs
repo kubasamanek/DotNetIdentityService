@@ -8,7 +8,7 @@ using PantryCloud.IdentityService.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace PantryCloud.IdentityService.Infrastructure.Migrations
+namespace PantryCloud.IdentityService.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -85,6 +85,35 @@ namespace PantryCloud.IdentityService.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ResetPasswordTokens");
+                });
+
+            modelBuilder.Entity("PantryCloud.IdentityService.Core.Entities.VerifyEmailToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("VerifyEmailTokens");
                 });
 #pragma warning restore 612, 618
         }

@@ -9,11 +9,11 @@ using PantryCloud.IdentityService.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace PantryCloud.IdentityService.Infrastructure.Migrations
+namespace PantryCloud.IdentityService.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250814161110_RemoveFirstAndLastName")]
-    partial class RemoveFirstAndLastName
+    [Migration("20250903094503_ChangeSomeTokenPropertiesToMutable")]
+    partial class ChangeSomeTokenPropertiesToMutable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,7 +33,8 @@ namespace PantryCloud.IdentityService.Infrastructure.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("boolean");
@@ -42,42 +43,51 @@ namespace PantryCloud.IdentityService.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("PantryCloud.IdentityService.Core.Entities.EmailVerificationToken", b =>
+            modelBuilder.Entity("PantryCloud.IdentityService.Core.Entities.ResetPasswordToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedOnUtc")
+                    b.Property<string>("CallBackUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("ExpiresOnUtc")
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("EmailVerificationTokens");
-                });
-
-            modelBuilder.Entity("PantryCloud.IdentityService.Core.Entities.EmailVerificationToken", b =>
-                {
-                    b.HasOne("PantryCloud.IdentityService.Core.Entities.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
+                    b.ToTable("ResetPasswordTokens");
                 });
 #pragma warning restore 612, 618
         }

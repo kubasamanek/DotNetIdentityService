@@ -21,6 +21,8 @@ public class AppSettings
 {
     public string FrontendUrl { get; set; } = "http://localhost:5019";
     public bool SendEmails { get; set; } = false;
+    public int ResetPasswordTokenExpirationInMinutes { get; set; } = 60;
+    public int VerifyEmailTokenExpirationInMinutes { get; set; } = 60;
 }
 
 public class EmailSettings

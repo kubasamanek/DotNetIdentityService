@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace PantryCloud.IdentityService.Infrastructure.Persistance.Migrations
+namespace PantryCloud.IdentityService.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class ChangeConifugrationsAssembly : Migration

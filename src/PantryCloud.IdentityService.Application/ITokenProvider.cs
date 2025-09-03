@@ -4,7 +4,8 @@ namespace PantryCloud.IdentityService.Application;
 
 public interface ITokenProvider
 {
-    public string CreateAccessToken(ApplicationUser user);
-    public string CreateRefreshToken();
-    public string CreatePasswordResetToken();
+    string CreateAccessToken(ApplicationUser user);
+    string CreateRefreshToken();
+    string CreatePasswordResetToken();
+    string CreateVerifyEmailToken();
 }

@@ -89,7 +89,7 @@ public class AuthServiceTests
             CancellationToken.None);
 
         result.IsError.ShouldBeTrue();
-        result.Errors.ShouldContain(AuthErrors.LoginFailed);
+        result.Errors.ShouldContain(AuthErrors.LoginInvalidCredentials);
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class AuthServiceTests
             CancellationToken.None);
 
         result.IsError.ShouldBeTrue();
-        result.Errors.ShouldContain(AuthErrors.LoginFailed);
+        result.Errors.ShouldContain(AuthErrors.LoginInvalidCredentials);
     }
 
 
@@ -244,7 +244,7 @@ public class AuthServiceTests
         var result = await authService.ResetPasswordAsync(new ResetPasswordRequestDto(user.Email, token.Token, "newPass123!"), CancellationToken.None);
 
         result.IsError.ShouldBeTrue();
-        result.Errors.ShouldContain(AuthErrors.PasswordResetTokenAlreadyUsed);
+        result.Errors.ShouldContain(AuthErrors.TokenAlreadyUsed);
     }
     
     [Fact]
@@ -263,7 +263,7 @@ public class AuthServiceTests
             new ResetPasswordRequestDto(user.Email, token.Token, "newPass123!"), CancellationToken.None);
 
         result.IsError.ShouldBeTrue();
-        result.Errors.ShouldContain(AuthErrors.PasswordResetTokenExpired);
+        result.Errors.ShouldContain(AuthErrors.TokenExpired);
     }
     
     [Fact]
@@ -282,7 +282,110 @@ public class AuthServiceTests
             new ResetPasswordRequestDto(user.Email, token.Token, "newPass123!"), CancellationToken.None);
 
         result.IsError.ShouldBeTrue();
-        result.Errors.ShouldContain(AuthErrors.PasswordResetTokenNotValid);
+        result.Errors.ShouldContain(AuthErrors.TokenNotValid);
+    }
+    
+    [Fact]
+    public async Task VerifyEmailAsync_ShouldVerifyEmail_WhenTokenIsValid()
+    {
+        await using var db = TestHelper.CreateInMemoryContext(nameof(VerifyEmailAsync_ShouldVerifyEmail_WhenTokenIsValid));
+        var user = Constants.ExampleUser;
+        var token = TestHelper.MakeVerifyEmailToken(user.Email, used: false, expired: false);
+
+        db.Users.Add(user);
+        db.VerifyEmailTokens.Add(token);
+        await db.SaveChangesAsync();
+
+        var service = new AuthService(_tokenProviderMock, db, _loggerMock, _configurationMock);
+
+        var result = await service.VerifyEmailAsync(new VerifyEmailRequestDto(user.Email, token.Token), CancellationToken.None);
+
+        result.IsError.ShouldBeFalse();
+
+        var updatedUser = await db.Users.SingleAsync(u => u.Email == user.Email);
+        updatedUser.EmailVerified.ShouldBeTrue();
+
+        var updatedToken = await db.VerifyEmailTokens.SingleAsync(t => t.Email == user.Email);
+        updatedToken.UsedAt.ShouldNotBeNull();
+    }
+    
+    [Fact]
+    public async Task VerifyEmailAsync_ShouldReturnError_WhenUserNotFound()
+    {
+        await using var db = TestHelper.CreateInMemoryContext(nameof(VerifyEmailAsync_ShouldReturnError_WhenUserNotFound));
+        var token = TestHelper.MakeVerifyEmailToken("notfound@example.com");
+
+        db.VerifyEmailTokens.Add(token);
+        await db.SaveChangesAsync();
+
+        var service = new AuthService(_tokenProviderMock, db, _loggerMock, _configurationMock);
+
+        var result = await service.VerifyEmailAsync(
+            new VerifyEmailRequestDto("notfound@example.com", token.Token),
+            CancellationToken.None);
+
+        result.IsError.ShouldBeTrue();
+        result.Errors.ShouldContain(AuthErrors.UserDoesNotExist("notfound@example.com"));
+    }
+    
+    [Fact]
+    public async Task VerifyEmailAsync_ShouldReturnError_WhenTokenNotFound()
+    {
+        await using var db = TestHelper.CreateInMemoryContext(nameof(VerifyEmailAsync_ShouldReturnError_WhenTokenNotFound));
+        var user = Constants.ExampleUser;
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var service = new AuthService(_tokenProviderMock, db, _loggerMock, _configurationMock);
+
+        var result = await service.VerifyEmailAsync(
+            new VerifyEmailRequestDto(user.Email, "invalid-token"),
+            CancellationToken.None);
+
+        result.IsError.ShouldBeTrue();
+        result.Errors.ShouldContain(AuthErrors.TokenNotValid);
+    }
+    
+    [Fact]
+    public async Task VerifyEmailAsync_ShouldReturnError_WhenTokenAlreadyUsed()
+    {
+        await using var db = TestHelper.CreateInMemoryContext(nameof(VerifyEmailAsync_ShouldReturnError_WhenTokenAlreadyUsed));
+        var user = Constants.ExampleUser;
+        var token = TestHelper.MakeVerifyEmailToken(user.Email, used: true);
+
+        db.Users.Add(user);
+        db.VerifyEmailTokens.Add(token);
+        await db.SaveChangesAsync();
+
+        var service = new AuthService(_tokenProviderMock, db, _loggerMock, _configurationMock);
+
+        var result = await service.VerifyEmailAsync(
+            new VerifyEmailRequestDto(user.Email, token.Token),
+            CancellationToken.None);
+
+        result.IsError.ShouldBeTrue();
+        result.Errors.ShouldContain(AuthErrors.TokenAlreadyUsed);
+    }
+    
+    [Fact]
+    public async Task VerifyEmailAsync_ShouldReturnError_WhenTokenExpired()
+    {
+        await using var db = TestHelper.CreateInMemoryContext(nameof(VerifyEmailAsync_ShouldReturnError_WhenTokenExpired));
+        var user = Constants.ExampleUser;
+        var token = TestHelper.MakeVerifyEmailToken(user.Email, expired: true);
+
+        db.Users.Add(user);
+        db.VerifyEmailTokens.Add(token);
+        await db.SaveChangesAsync();
+
+        var service = new AuthService(_tokenProviderMock, db, _loggerMock, _configurationMock);
+
+        var result = await service.VerifyEmailAsync(
+            new VerifyEmailRequestDto(user.Email, token.Token),
+            CancellationToken.None);
+
+        result.IsError.ShouldBeTrue();
+        result.Errors.ShouldContain(AuthErrors.TokenExpired);
     }
 }
 

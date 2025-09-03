@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace PantryCloud.IdentityService.Infrastructure.Migrations
+namespace PantryCloud.IdentityService.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class SwitchFromIdentityCore : Migration

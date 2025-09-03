@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace PantryCloud.IdentityService.Infrastructure.Persistance.Migrations
+namespace PantryCloud.IdentityService.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class AddResetPasswordTokens : Migration

@@ -9,11 +9,11 @@ using PantryCloud.IdentityService.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace PantryCloud.IdentityService.Infrastructure.Migrations
+namespace PantryCloud.IdentityService.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250814163709_AddRefreshToken")]
-    partial class AddRefreshToken
+    [Migration("20250903092202_AddResetPasswordTokenConfiguration")]
+    partial class AddResetPasswordTokenConfiguration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,6 +51,38 @@ namespace PantryCloud.IdentityService.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("PantryCloud.IdentityService.Core.Entities.ResetPasswordToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CallBackUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ResetPasswordTokens");
                 });
 #pragma warning restore 612, 618
         }

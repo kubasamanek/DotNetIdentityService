@@ -9,11 +9,11 @@ using PantryCloud.IdentityService.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace PantryCloud.IdentityService.Infrastructure.Persistance.Migrations
+namespace PantryCloud.IdentityService.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250903091933_AddResetPasswordTokens")]
-    partial class AddResetPasswordTokens
+    [Migration("20250903092320_ChangeConifugrationsAssembly")]
+    partial class ChangeConifugrationsAssembly
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,7 +33,8 @@ namespace PantryCloud.IdentityService.Infrastructure.Persistance.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("boolean");
@@ -49,6 +50,9 @@ namespace PantryCloud.IdentityService.Infrastructure.Persistance.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -68,7 +72,8 @@ namespace PantryCloud.IdentityService.Infrastructure.Persistance.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");

@@ -9,11 +9,11 @@ using PantryCloud.IdentityService.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace PantryCloud.IdentityService.Infrastructure.Migrations
+namespace PantryCloud.IdentityService.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250814160528_SwitchFromIdentityCore")]
-    partial class SwitchFromIdentityCore
+    [Migration("20250814161110_RemoveFirstAndLastName")]
+    partial class RemoveFirstAndLastName
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,14 +37,6 @@ namespace PantryCloud.IdentityService.Infrastructure.Migrations
 
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()

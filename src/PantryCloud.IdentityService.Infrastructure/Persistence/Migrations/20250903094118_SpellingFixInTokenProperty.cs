@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace PantryCloud.IdentityService.Infrastructure.Persistance.Migrations
+namespace PantryCloud.IdentityService.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class ChangeSomeTokenPropertiesToMutable : Migration
+    public partial class SpellingFixInTokenProperty : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace PantryCloud.IdentityService.Core.Entities;
 
 public class ApplicationUser
@@ -9,7 +7,7 @@ public class ApplicationUser
     public required string Email { get; init; }
     
     public required string PasswordHash { get; set; }
-    public bool EmailVerified { get; init; }
+    public bool EmailVerified { get; set; }
     
     public string? RefreshToken { get; set; }
 
