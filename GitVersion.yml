@@ -24,7 +24,7 @@ branches:
     regex: ^main$|^master$
     increment: Patch
     label: ''
-    is-mainline: true
+    is-main-branch: true
 
   release:
     regex: ^releases?[/-]
