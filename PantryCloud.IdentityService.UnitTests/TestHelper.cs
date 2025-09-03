@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using PantryCloud.IdentityService.Application;
+using PantryCloud.IdentityService.Core;
 using PantryCloud.IdentityService.Core.Entities;
 using PantryCloud.IdentityService.Infrastructure;
 using PantryCloud.IdentityService.Infrastructure.Persistence;
@@ -30,9 +31,9 @@ internal static class TestHelper
         return tp;
     }
 
-    public static IConfiguration MockConfiguration()
+    public static ApiConfiguration MockConfiguration()
     {
-        var tp = Substitute.For<IConfiguration>();
+        var tp = new ApiConfiguration();
         return tp;
     }
 

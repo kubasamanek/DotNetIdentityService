@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PantryCloud.IdentityService.Application;
 using PantryCloud.IdentityService.Application.DTOs;
+using PantryCloud.IdentityService.Core;
 using PantryCloud.IdentityService.Core.Errors;
 using PantryCloud.IdentityService.Infrastructure.Services;
 using Shouldly;
@@ -13,7 +14,7 @@ public class AuthServiceTests
 {
     private readonly ILogger<AuthService> _loggerMock = TestHelper.MockLogger();
     private readonly ITokenProvider  _tokenProviderMock = TestHelper.MockTokenProvider();
-    private readonly IConfiguration _configurationMock = TestHelper.MockConfiguration();
+    private readonly ApiConfiguration _configurationMock = TestHelper.MockConfiguration();
 
     [Fact]
     public async Task RegisterAsync_ShouldCreateUser_AndReturnId_WhenNewEmail()

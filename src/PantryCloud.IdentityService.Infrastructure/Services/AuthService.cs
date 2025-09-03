@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PantryCloud.IdentityService.Application;
@@ -6,6 +7,7 @@ using PantryCloud.IdentityService.Core.Entities;
 using PantryCloud.IdentityService.Infrastructure.Persistence;
 using ErrorOr;
 using Microsoft.Extensions.Configuration;
+using PantryCloud.IdentityService.Core;
 using PantryCloud.IdentityService.Core.Errors;
 
 namespace PantryCloud.IdentityService.Infrastructure.Services;
@@ -14,7 +16,7 @@ public class AuthService(
     ITokenProvider tokenProvider,
     ApplicationDbContext dbContext,
     ILogger<AuthService> logger,
-    IConfiguration config) : IAuthService
+    ApiConfiguration config) : IAuthService
 {
     public async Task<ErrorOr<RegisterResponseDto>> RegisterAsync(RegisterRequestDto request, CancellationToken cancellationToken)
     {
@@ -113,7 +115,7 @@ public class AuthService(
         }
 
         var token = tokenProvider.CreatePasswordResetToken();
-        var callbackUrl = $"{config["App:FrontendUrl"]}/reset-password?email={user.Email}&token={Uri.EscapeDataString(token)}";
+        var callbackUrl = $"{config.App.FrontendUrl}/reset-password?email={user.Email}&token={Uri.EscapeDataString(token)}";
 
         var entity = new ResetPasswordToken
         {
@@ -126,8 +128,21 @@ public class AuthService(
         
         await dbContext.ResetPasswordTokens.AddAsync(entity, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
-        
-        //TODO: SEND EMAIL
+
+        if (config.App.SendEmails)
+        {
+            var client = new SmtpClient(config.Email.Host, config.Email.Port);
+            var message = new MailMessage
+            {
+                From = new MailAddress(config.Email.From),
+                Subject = Constants.ResetPasswordEmailSubject,
+                Body = string.Format(Constants.ResetPasswordEmailBodyTemplate, callbackUrl),
+                IsBodyHtml = true
+            };
+            message.To.Add(user.Email);
+
+            await client.SendMailAsync(message, cancellationToken);
+        }
 
         return new ForgotPasswordResponseDto(token, callbackUrl);
     }
