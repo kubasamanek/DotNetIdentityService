@@ -23,4 +23,24 @@ public static class AuthErrors
         code: "Auth.RefreshToken.ExpiredRefreshToken",
         description: "Expired refresh token."
     );
+
+    public static Error UserDoesNotExist(string email) => Error.NotFound(
+        code: "Auth.UserDoesNotExist",
+        description: $"User with email {email} not found."
+    );
+
+    public static Error PasswordResetTokenNotValid = Error.Unauthorized(
+        code: "Auth.PasswordResetTokenInvalid",
+        description: $"Password reset token is not valid."
+    );
+    
+    public static Error PasswordResetTokenExpired = Error.Unauthorized(
+        code: "Auth.PasswordResetTokenExpired",
+        description: $"Password reset token is expired."
+    );
+    
+    public static Error PasswordResetTokenAlreadyUsed = Error.Unauthorized(
+        code: "Auth.PasswordResetTokenAlreadyUsed",
+        description: $"Password reset token has already been used."
+    );
 }

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using PantryCloud.IdentityService.Core;
 using PantryCloud.IdentityService.Infrastructure.Services;
 using Shouldly;
 
@@ -99,18 +100,17 @@ public class TokenProviderTests
         };
     }
 
-    private static IConfiguration BuildTestConfiguration()
+    private static ApiConfiguration BuildTestConfiguration()
     {
-        var dict = new Dictionary<string, string?>
+        return new ApiConfiguration
         {
-            { "Jwt:PrivateKeyPath", Constants.Jwt.PrivateKeyPath },
-            { "Jwt:Issuer", Constants.Jwt.Issuer },
-            { "Jwt:Audience", Constants.Jwt.Audience },
-            { "Jwt:ExpirationInMinutes", Constants.Jwt.ExpirationInMinutes.ToString() }
+            Jwt = new JwtSettings
+            {
+                PrivateKeyPath = Constants.Jwt.PrivateKeyPath,
+                Issuer = Constants.Jwt.Issuer,
+                Audience = Constants.Jwt.Audience,
+                ExpirationInMinutes = Constants.Jwt.ExpirationInMinutes,
+            }
         };
-
-        return new ConfigurationBuilder()
-            .AddInMemoryCollection(dict!)
-            .Build();
     }
 }

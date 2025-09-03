@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PantryCloud.IdentityService.Core.Entities;
 
-namespace PantryCloud.IdentityService.Core;
+namespace PantryCloud.IdentityService.Core.Configurations;
 
 internal sealed class UserConfiguration : IEntityTypeConfiguration<ApplicationUser>
 {
